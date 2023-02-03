@@ -5,77 +5,101 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Calculator {
-    private int people_num = 0;
-    final private HashMap<String,Product> products = new HashMap<>();
+    /**
+     * Кол-во людей за столом
+     */
+    private int peopleNum = 0;
+    /**
+     * Список продуктов ключ <b>Название продукта</b>, значение <b>Продукт</b>.
+     */
+    private final HashMap<String,Product> products = new HashMap<>();
 
+    /**
+     * Exeption: Слишком мало людей
+     */
     private static class ToFewPeople extends Exception {}
 
-    private void get_people_num(){
+    /**
+     * Функция получения кол-ва людей за столом
+     */
+    private void getPeopleNum(){
         final Scanner scanner = new Scanner(System.in);
         while(true){
             System.out.println("На скольких человек необходимо разделить счёт?");
             try{
-                people_num = scanner.nextInt();
-                if (people_num < 1) throw new ToFewPeople();
+                peopleNum = scanner.nextInt();
+                if (peopleNum < 1) throw new ToFewPeople();
             }
             catch (InputMismatchException|ToFewPeople e){
                 System.out.println("Допускается ввод только целых чисел >= 1.");
-                scanner.next();
+                scanner.nextLine(); // Забираем все из буфера
                 continue;
             }
             break;
         }
     }
 
-    private void get_products(){
+    /**
+     * Функция получения списка продуктов
+     */
+    private void getProducts(){
         final Scanner scanner = new Scanner(System.in);
-        String product_name;
-        double product_price;
+        String productName;
+        double productPrice;
         while(true){
             System.out.println(
                     "Добавьте новый товар (например: Груша 10.2) или напишите 'Завершить':"
             );
-            product_name = scanner.next().trim();
-            if (product_name.equalsIgnoreCase("завершить")){
-                scanner.nextLine();
+            productName = scanner.next().trim();
+            if (productName.equalsIgnoreCase("завершить")){
+                scanner.nextLine(); // Забираем все из буфера
                 break;
             }
             try {
-                product_price = scanner.nextDouble();
+                productPrice = scanner.nextDouble();
             }
             catch (InputMismatchException e){
                 System.out.println("Цена должна быть дробным числом через . или целым числом");
-                scanner.nextLine();
+                scanner.nextLine(); // Забираем все из буфера
                 continue;
             }
 
-            // Проверяем и добавляем продукт в список
-            if (!products.containsKey(product_name)){
-                products.put(product_name, new Product(product_name, product_price));
+            // Проверяем и добавляем продукт в список, если продукт уже есть сохраняем цену
+            if (!products.containsKey(productName)){
+                products.put(productName, new Product(productName, productPrice));
             }
             else{
-                products.get(product_name).prices.add(product_price);
+                products.get(productName).prices.add(productPrice);
             }
         }
     }
 
-    private void print_products(){
+    /**
+     * Функция рассчета стоймости и вывода списка продуктов
+     */
+    private void printProducts(){
         System.out.println("Добавленные товары:");
-        double price_sum = 0;
+        double priceSum = 0;
         for(HashMap.Entry<String, Product> entry : products.entrySet()) {
             Product product = entry.getValue();
             System.out.println(product.name);
-            for (double price : product.prices) price_sum += price;
+            for (double price : product.prices) priceSum += price;
         }
-        // TODO: Formater
-        System.out.printf("Каждый человек должен запатить по %.2f рублю%n", price_sum/people_num);
+        double priceForEveryPeople = priceSum / peopleNum;
+        System.out.printf(
+                "Каждый человек должен запатить по %.2f %s",
+                priceForEveryPeople,
+                Formatter.getRubText(priceForEveryPeople)
+        );
     }
 
-
+    /**
+     * Запуск калькулятора товаров
+     */
     public void run() {
-        get_people_num();
-        get_products();
-        print_products();
+        getPeopleNum();
+        getProducts();
+        printProducts();
     }
 
 }
